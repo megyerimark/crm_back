@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
@@ -481,6 +482,8 @@ class ImportService
             $reader->setInputEncoding(Csv::guessEncoding($path, 'CP1250'));
             $reader->setDelimiter(null);
             $reader->setTestAutoDetect(true);
+            /* Keep every CSV cell as text so phone numbers keep their leading "+" or "0". */
+            $reader->setValueBinder(new StringValueBinder);
 
             return $reader->load($path);
         }

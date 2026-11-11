@@ -27,7 +27,7 @@ class ImportTest extends TestCase
     {
         $content = "Név;E-mail cím;Telefonszám;Cégnév;Megjegyzés\n"
             ."Kiss János;janos@example.com;+36 30 111 2222;Kiss Kft.;VIP\n"
-            ."Nagy Éva;eva@example.com;+36 30 333 4444;;\n"
+            ."Nagy Éva;eva@example.com;+36303334444;;\n"
             ."Hibás Sor;nem-email;;;\n"
             ."Kiss János másodszor;JANOS@example.com;;;\n"
             .";;;;\n"
@@ -64,6 +64,7 @@ class ImportTest extends TestCase
         $this->assertSame(1, $import->failed_count);
         $this->assertSame(3, Client::count());
         $this->assertSame('import', Client::where('email', 'janos@example.com')->value('source'));
+        $this->assertSame('+36303334444', Client::where('email', 'eva@example.com')->value('phone'));
         $this->assertNull($import->path, 'uploaded file is deleted after a successful import');
 
         $this->getJson("/api/v1/imports/{$id}/rows?status=failed")->assertOk()->assertJsonPath('data.0.row_number', 4);
@@ -129,6 +130,17 @@ class ImportTest extends TestCase
 
         $this->postJson('/api/v1/imports/'.$response->json('data.id').'/start')->assertOk();
         $this->assertSame('Szabó Anna', Client::firstOrFail()->name);
+    }
+
+    public function test_row_messages_use_the_importing_users_language(): void
+    {
+        $this->signIn();
+        $this->user->update(['locale' => 'de']);
+        $id = $this->withHeader('X-Locale', 'hu')->post('/api/v1/imports', ['file' => $this->csv()], ['Accept' => 'application/json'])->json('data.id');
+
+        $this->postJson("/api/v1/imports/{$id}/start")->assertOk();
+
+        $this->assertSame(['Ungültige E-Mail-Adresse: nem-email'], ImportRow::where('import_id', $id)->where('status', 'failed')->value('messages'));
     }
 
     public function test_rejects_unsupported_file_types(): void

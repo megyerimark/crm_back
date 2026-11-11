@@ -32,7 +32,10 @@ class ProcessImport implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        $current->set($import->workspace()->first());
+        $workspace = $import->workspace()->first();
+        $current->set($workspace);
+        /* Row messages are stored in the language of the user who started the import. */
+        app()->setLocale($import->user?->preferredLocale() ?? $workspace->locale);
 
         try {
             $imports->process($import);
