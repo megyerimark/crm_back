@@ -13,14 +13,18 @@ use App\Models\FormSubmission;
 use App\Models\Import;
 use App\Models\Lead;
 use App\Models\Pipeline;
+use App\Models\PlanSetting;
 use App\Models\Task;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Resolves the effective plan of a workspace and enforces its limits server side.
  */
 class PlanService
 {
+    public const OVERRIDES_CACHE = 'plan_settings.overrides';
+
     /**
      * The plan whose limits currently apply: an active paid subscription wins,
      * then a running trial (Pro), otherwise Free. Expiry never deletes data.
@@ -54,7 +58,26 @@ class PlanService
      */
     public function definition(Plan $plan): array
     {
-        return config('plans.plans.'.$plan->value);
+        return array_replace_recursive(config('plans.plans.'.$plan->value), $this->overrides()[$plan->value] ?? []);
+    }
+
+    /**
+     * Super Admin overrides stored in the database (cached; cleared whenever a plan is saved).
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function overrides(): array
+    {
+        try {
+            return Cache::rememberForever(self::OVERRIDES_CACHE, fn () => PlanSetting::query()->pluck('overrides', 'plan')->all());
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    public function forgetOverrides(): void
+    {
+        Cache::forget(self::OVERRIDES_CACHE);
     }
 
     public function limit(Workspace $workspace, string $key): ?int

@@ -44,10 +44,15 @@ class ResolveWorkspace
 
         $this->current->set($workspace, $role);
 
-        try {
-            return $next($request);
-        } finally {
-            $this->current->clear();
-        }
+        return $next($request);
+    }
+
+    /**
+     * Cleared only after the response has been sent: streamed downloads run their queries while sending,
+     * and must still be scoped to the tenant.
+     */
+    public function terminate(Request $request, Response $response): void
+    {
+        $this->current->clear();
     }
 }

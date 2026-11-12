@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Enums\Plan;
 use App\Models\Workspace;
 use App\Services\AuditLogger;
+use App\Services\PlanService;
 use Laravel\Cashier\Subscription;
 
 /**
@@ -12,7 +13,7 @@ use Laravel\Cashier\Subscription;
  */
 class BillingService
 {
-    public function __construct(protected AuditLogger $audit) {}
+    public function __construct(protected AuditLogger $audit, protected PlanService $plans) {}
 
     public function isConfigured(): bool
     {
@@ -21,7 +22,7 @@ class BillingService
 
     public function priceId(Plan $plan, string $interval): ?string
     {
-        return config("plans.plans.{$plan->value}.stripe_prices.{$interval}");
+        return $this->plans->definition($plan)['stripe_prices'][$interval] ?? null;
     }
 
     /**

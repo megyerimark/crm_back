@@ -42,6 +42,7 @@ return [
     'two_factor_required' => 'Enter the code from your authenticator app.',
     'challenge_expired' => 'The sign-in attempt has expired, please start again.',
     'owner_has_members' => 'The :workspace workspace has other members. Transfer ownership or remove the members first.',
+    'admin_two_factor_required' => 'Two-factor authentication is required for the Super Admin console. Turn it on in your profile.',
     'confirm_word' => 'DELETE',
     'confirm_mismatch' => 'Type :word to confirm',
 ];

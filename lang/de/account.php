@@ -42,6 +42,7 @@ return [
     'two_factor_required' => 'Geben Sie den Code aus Ihrer Authenticator-App ein.',
     'challenge_expired' => 'Der Anmeldeversuch ist abgelaufen, bitte erneut starten.',
     'owner_has_members' => 'Der Arbeitsbereich :workspace hat weitere Mitglieder. Übertragen Sie zuerst die Inhaberschaft oder entfernen Sie die Mitglieder.',
+    'admin_two_factor_required' => 'Für die Super-Admin-Konsole ist die Zwei-Faktor-Authentifizierung Pflicht. Aktivieren Sie sie im Profil.',
     'confirm_word' => 'LÖSCHEN',
     'confirm_mismatch' => 'Geben Sie zur Bestätigung :word ein',
 ];

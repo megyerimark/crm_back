@@ -42,6 +42,7 @@ return [
     'two_factor_required' => 'Add meg a hitelesítő alkalmazás kódját.',
     'challenge_expired' => 'A bejelentkezési kísérlet lejárt, kezdd újra.',
     'owner_has_members' => 'A(z) :workspace munkaterületnek további tagjai vannak. Előbb add át a tulajdonjogot vagy távolítsd el a tagokat.',
+    'admin_two_factor_required' => 'A Super Admin felülethez kötelező a kétlépcsős azonosítás. Kapcsold be a Profil oldalon.',
     'confirm_word' => 'TÖRLÉS',
     'confirm_mismatch' => 'A megerősítéshez írd be: :word',
 ];

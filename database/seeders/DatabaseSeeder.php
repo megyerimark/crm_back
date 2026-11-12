@@ -21,7 +21,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(WorkspaceService $workspaces, CurrentWorkspace $current): void
     {
-        User::factory()->superAdmin()->create(['name' => 'Super Admin', 'email' => 'admin@example.com']);
+        /* Demo admin without 2FA: set ADMIN_REQUIRE_2FA=false locally, or enable 2FA in the profile. */
+        User::factory()->superAdmin()->create(['name' => 'Super Admin', 'email' => 'admin@example.com', 'two_factor_secret' => null, 'two_factor_confirmed_at' => null]);
 
         $owner = User::factory()->create(['name' => 'Demo Felhasználó', 'email' => 'demo@example.com', 'locale' => 'hu']);
         $workspace = $workspaces->create($owner, ['name' => 'Demo Klímaszerviz Kft.']);

@@ -36,6 +36,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'is_super_admin' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
             'last_digest_sent_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'notify_task_reminders' => 'boolean',
             'notify_daily_digest' => 'boolean',
             'notify_new_leads' => 'boolean',

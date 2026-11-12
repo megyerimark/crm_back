@@ -90,7 +90,12 @@ class ClientController extends Controller
         $this->audit->log('client.exported', null, ['format' => $format]);
 
         $columns = ['name', 'company', 'email', 'phone', 'address', 'type', 'status', 'category', 'tags', 'source', 'notes', 'created_at'];
-        $rows = $this->filteredQuery($request)->orderBy('name')->lazy()->map(fn (Client $client) => [
+
+        /*
+         * The file is written while the response streams, after the workspace middleware has finished,
+         * so the tenant constraint is bound explicitly here instead of relying on the global scope.
+         */
+        $rows = $this->filteredQuery($request)->where('clients.workspace_id', $this->workspace()->id)->orderBy('name')->lazy()->map(fn (Client $client) => [
             $client->name, $client->company, $client->email, $client->phone, $client->address, $client->type, $client->status,
             $client->category, implode(', ', $client->tags ?? []), $client->source, $client->notes, $client->created_at?->toDateTimeString(),
         ]);

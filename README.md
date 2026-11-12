@@ -33,7 +33,8 @@ Tesztek: `php artisan test`
 | Import | `imports` (XLSX/XLS/CSV feltöltés, munkalap- és fejlécfelismerés, oszlop-hozzárendelés, előnézet, duplikáció: kihagyás/frissítés, idempotens újrapróbálás, soronkénti napló) |
 | Automatizálás | `automations` (pl. új érdeklődő → teendő; Business: körforgásos kiosztás) |
 | Riportok | `dashboard`, `reports` (havi bontás, konverzió, pipeline, űrlapok, források, csapat) |
-| Super Admin | `admin/stats`, `admin/workspaces`, `admin/users`, `admin/audit-logs` (`php artisan crm:super-admin email@cim`) |
+| Super Admin | `admin/stats`, `admin/analytics`, `admin/workspaces?status=trial|expiring|paid|free|suspended`, `admin/subscriptions`, `admin/invoices` (+ újrapróbálás), `admin/plans` (limitek/árak szerkesztése), `admin/support/tickets`, `admin/system` (rendszerállapot, sikertelen jobok), `admin/users`, `admin/audit-logs` – kötelező 2FA (`ADMIN_REQUIRE_2FA`), `php artisan crm:super-admin email@cim` |
+| Support Center | `support/tickets` (jegy, válasz, lezárás) – prioritás a csomag szerint: Business magas, Pro normál, Free alacsony |
 
 ## Fiókbiztonság és adatvédelem
 
@@ -46,6 +47,7 @@ Tesztek: `php artisan test`
 
 ## Biztonsági alapelvek
 
+- `tests/Feature/WorkspaceIsolationTest.php` minden munkaterületi végpontot automatikusan végigpróbál egy idegen munkaterület adataival (olvasás, módosítás, törlés, listák, exportok, hivatkozások); új végpont paraméteréhez kötelező izolációs adatot adni.
 - Minden munkaterületi rekord `workspace_id`-hoz kötött; a `ResolveWorkspace` middleware minden kérésnél ellenőrzi a tagságot (`X-Workspace-Id` fejléc), a globális scope pedig a route model bindinget is a munkaterületre szűkíti (idegen ID → 404).
 - Szerepkörök: Owner, Admin, Member, Viewer (a Viewer csak olvashat). A Super Admin külön jogosultság.
 - Csomaglimitek és funkciók szerveroldalon (`config/plans.php`, `PlanService`); a próba lejárata Free-re vált, adat nem törlődik (402-es válasz `plan_limit` / `feature_not_available` kóddal).

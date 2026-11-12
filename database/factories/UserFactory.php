@@ -35,7 +35,18 @@ class UserFactory extends Factory
 
     public function superAdmin(): static
     {
-        return $this->state(fn (array $attributes) => ['is_super_admin' => true]);
+        return $this->state(fn (array $attributes) => ['is_super_admin' => true])->withTwoFactor();
+    }
+
+    /**
+     * Two-factor authentication enabled with the RFC 6238 test secret.
+     */
+    public function withTwoFactor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_secret' => encrypt('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'),
+            'two_factor_confirmed_at' => now(),
+        ]);
     }
 
     /**

@@ -49,8 +49,18 @@ class AdminController extends Controller
         $query = Workspace::query()->with('owner')->withCount('members');
         $this->applySearch($query, $request->query('search'), ['name', 'slug']);
         $query->when($request->query('plan'), fn ($q, $plan) => $q->where('plan', $plan));
+        $paid = fn ($q) => $q->where('subscription_status', 'active')->whereIn('plan', ['pro', 'business']);
+        match ($request->query('status')) {
+            'trial' => $query->where('trial_ends_at', '>', now())->whereNot($paid),
+            'expiring' => $query->whereBetween('trial_ends_at', [now(), now()->addDays(3)])->whereNot($paid),
+            'paid' => $query->where($paid),
+            'free' => $query->whereNot($paid)->where(fn ($q) => $q->whereNull('trial_ends_at')->orWhere('trial_ends_at', '<=', now())),
+            'suspended' => $query->whereNotNull('suspended_at'),
+            default => null,
+        };
 
-        $page = $query->latest()->paginate($this->perPage($request));
+        $request->query('status') === 'expiring' || $request->query('status') === 'trial' ? $query->orderBy('trial_ends_at') : $query->latest();
+        $page = $query->paginate($this->perPage($request));
 
         return response()->json($page->through(fn (Workspace $workspace) => $this->workspacePayload($workspace)));
     }
@@ -106,6 +116,9 @@ class AdminController extends Controller
         $page = $query->latest()->paginate($this->perPage($request));
 
         return response()->json($page->through(fn (User $user) => [
+            'email_verified_at' => $user->email_verified_at,
+            'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+            'last_seen_at' => $user->last_seen_at,
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,

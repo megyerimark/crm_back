@@ -3,6 +3,11 @@
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\ActivityController;
 use App\Http\Controllers\Api\V1\Admin\AdminController;
+use App\Http\Controllers\Api\V1\Admin\AnalyticsController;
+use App\Http\Controllers\Api\V1\Admin\BillingAdminController;
+use App\Http\Controllers\Api\V1\Admin\PlanAdminController;
+use App\Http\Controllers\Api\V1\Admin\SupportAdminController;
+use App\Http\Controllers\Api\V1\Admin\SystemController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AutomationRuleController;
@@ -19,6 +24,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PipelineController;
 use App\Http\Controllers\Api\V1\PublicFormController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\SupportController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TeamController;
 use App\Http\Controllers\Api\V1\TwoFactorController;
@@ -84,6 +90,20 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::patch('workspaces/{workspace}', [AdminController::class, 'updateWorkspace'])->name('workspaces.update');
             Route::get('users', [AdminController::class, 'users'])->name('users.index');
             Route::get('audit-logs', [AdminController::class, 'auditLogs'])->name('audit-logs');
+            Route::get('analytics', AnalyticsController::class)->name('analytics');
+            Route::get('subscriptions', [BillingAdminController::class, 'subscriptions'])->name('subscriptions');
+            Route::get('invoices', [BillingAdminController::class, 'invoices'])->name('invoices');
+            Route::post('invoices/{invoice}/retry', [BillingAdminController::class, 'retryInvoice'])->name('invoices.retry');
+            Route::get('plans', [PlanAdminController::class, 'index'])->name('plans.index');
+            Route::put('plans/{plan}', [PlanAdminController::class, 'update'])->name('plans.update');
+            Route::delete('plans/{plan}', [PlanAdminController::class, 'reset'])->name('plans.reset');
+            Route::get('system', [SystemController::class, 'show'])->name('system');
+            Route::post('system/failed-jobs/{uuid}/retry', [SystemController::class, 'retryFailedJob'])->name('system.failed-jobs.retry');
+            Route::delete('system/failed-jobs/{uuid}', [SystemController::class, 'forgetFailedJob'])->name('system.failed-jobs.forget');
+            Route::get('support/tickets', [SupportAdminController::class, 'index'])->name('support.index');
+            Route::get('support/tickets/{ticket}', [SupportAdminController::class, 'show'])->name('support.show');
+            Route::post('support/tickets/{ticket}/messages', [SupportAdminController::class, 'reply'])->name('support.reply');
+            Route::patch('support/tickets/{ticket}', [SupportAdminController::class, 'update'])->name('support.update');
         });
 
         /* Workspace scoped (X-Workspace-Id header) */
@@ -117,6 +137,12 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
             Route::apiResource('automations', AutomationRuleController::class)->parameters(['automations' => 'automationRule'])->except('show');
             Route::apiResource('custom-fields', CustomFieldController::class)->parameters(['custom-fields' => 'customField'])->except('show');
+
+            Route::get('support/tickets', [SupportController::class, 'index'])->name('support.index');
+            Route::post('support/tickets', [SupportController::class, 'store'])->middleware('throttle:10,60')->name('support.store');
+            Route::get('support/tickets/{ticket}', [SupportController::class, 'show'])->name('support.show');
+            Route::post('support/tickets/{ticket}/messages', [SupportController::class, 'reply'])->middleware('throttle:30,60')->name('support.reply');
+            Route::post('support/tickets/{ticket}/close', [SupportController::class, 'close'])->name('support.close');
 
             Route::get('team/members', [TeamController::class, 'members'])->name('team.members');
             Route::get('team/invitations', [TeamController::class, 'invitations'])->name('team.invitations');
