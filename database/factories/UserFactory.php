@@ -33,6 +33,11 @@ class UserFactory extends Factory
         ];
     }
 
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => ['is_super_admin' => true]);
+    }
+
     /**
      * Indicate that the model's email address should be unverified.
      */
