@@ -1,6 +1,6 @@
-# ÜgyfélFlow CRM – backend (Laravel API)
+# VállalkozóOS – backend (Laravel API)
 
-> Munkanév: **ÜgyfélFlow** (VállalkozóOS). A végleges név az `APP_NAME` környezeti változóval állítható.
+> Ügyfél- és munkakezelés szolgáltató vállalkozóknak. A megjelenített név az `APP_NAME` környezeti változóval állítható.
 
 Verziózott REST API (`/api/v1`) az Angular frontendhez: Laravel 13, Sanctum token-hitelesítés, MySQL (fejlesztéshez SQLite).
 

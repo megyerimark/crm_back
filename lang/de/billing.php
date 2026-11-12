@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'invoice_item' => 'ÜgyfélFlow :plan Abonnement (:interval)',
+    'invoice_item' => 'VállalkozóOS :plan Abonnement (:interval)',
     'interval' => ['monthly' => 'monatlich', 'yearly' => 'jährlich'],
     'unit' => ['monthly' => 'Monat', 'yearly' => 'Jahr'],
     'not_configured' => 'Die Online-Zahlung ist noch nicht eingerichtet. Bitte kontaktieren Sie uns.',

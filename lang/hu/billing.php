@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'invoice_item' => 'ÜgyfélFlow :plan előfizetés (:interval)',
+    'invoice_item' => 'VállalkozóOS :plan előfizetés (:interval)',
     'interval' => ['monthly' => 'havi', 'yearly' => 'éves'],
     'unit' => ['monthly' => 'hó', 'yearly' => 'év'],
     'not_configured' => 'Az online fizetés még nincs beállítva. Kérjük, vedd fel velünk a kapcsolatot.',

@@ -233,7 +233,7 @@ class BillingTest extends TestCase
                 && str_contains($xml, '<adoszam>12345678-2-41</adoszam>')
                 && str_contains($xml, '<afakulcs>27</afakulcs>')
                 && str_contains($xml, '<bruttoErtek>2990</bruttoErtek>')
-                && str_contains($xml, '<megnevezes>ÜgyfélFlow Pro előfizetés (havi)</megnevezes>');
+                && str_contains($xml, '<megnevezes>VállalkozóOS Pro előfizetés (havi)</megnevezes>');
         });
 
         $this->get("/api/v1/billing/invoices/{$invoice->id}/pdf")->assertOk();
