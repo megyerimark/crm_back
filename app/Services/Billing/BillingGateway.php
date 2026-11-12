@@ -33,6 +33,11 @@ interface BillingGateway
     public function resume(Workspace $workspace): void;
 
     /**
+     * Cancels immediately (account deletion).
+     */
+    public function cancelNow(Workspace $workspace): void;
+
+    /**
      * Pushes name, e-mail and address to the provider's customer record.
      */
     public function syncCustomer(Workspace $workspace): void;

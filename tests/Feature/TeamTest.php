@@ -31,11 +31,12 @@ class TeamTest extends TestCase
 
         $this->getJson("/api/v1/invitations/{$token}")->assertOk()->assertJsonPath('data.workspace', 'Teszt Kft.');
 
-        $colleague = User::factory()->create(['email' => 'kollega@example.com']);
+        $colleague = User::factory()->unverified()->create(['email' => 'kollega@example.com']);
         Sanctum::actingAs($colleague);
         $this->postJson("/api/v1/invitations/{$token}/accept")->assertOk()->assertJsonPath('data.role', 'member');
 
         $this->assertSame('member', $colleague->roleIn($this->workspace)?->value);
+        $this->assertTrue($colleague->fresh()->hasVerifiedEmail(), 'accepting the e-mailed invitation verifies the address');
         $this->getJson("/api/v1/invitations/{$token}")->assertNotFound();
     }
 

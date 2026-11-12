@@ -72,6 +72,24 @@ class TeamController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /**
+     * Owner hands the workspace over to another member (needed before the owner can delete their account).
+     */
+    public function transferOwnership(Request $request): JsonResponse
+    {
+        $workspace = $this->workspace();
+        abort_unless(app(CurrentWorkspace::class)->role() === WorkspaceRole::Owner, 403, __('crm.insufficient_role'));
+
+        $data = $request->validate(['user_id' => ['required', 'integer', $this->memberRule(), Rule::notIn([$request->user()->id])]]);
+
+        $workspace->members()->updateExistingPivot($request->user()->id, ['role' => WorkspaceRole::Admin->value]);
+        $workspace->members()->updateExistingPivot($data['user_id'], ['role' => WorkspaceRole::Owner->value]);
+        $workspace->forceFill(['owner_id' => $data['user_id']])->save();
+        $this->audit->log('workspace.ownership_transferred', $workspace, ['from' => $request->user()->id, 'to' => $data['user_id']]);
+
+        return response()->json(['data' => MemberResource::collection($workspace->members()->orderBy('name')->get())]);
+    }
+
     public function invitations(): JsonResponse
     {
         $invitations = $this->workspace()->invitations()->with('inviter')->latest()->limit(100)->get();

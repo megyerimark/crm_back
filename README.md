@@ -1,6 +1,6 @@
-# ÜgyfélFlow CRM – backend (Laravel API)
+# VállalkozóOS – backend (Laravel API)
 
-> Munkanév: **ÜgyfélFlow** (VállalkozóOS). A végleges név az `APP_NAME` környezeti változóval állítható.
+> Ügyfél- és munkakezelés szolgáltató vállalkozóknak. A megjelenített név az `APP_NAME` környezeti változóval állítható.
 
 Verziózott REST API (`/api/v1`) az Angular frontendhez: Laravel 13, Sanctum token-hitelesítés, MySQL (fejlesztéshez SQLite).
 
@@ -34,6 +34,15 @@ Tesztek: `php artisan test`
 | Automatizálás | `automations` (pl. új érdeklődő → teendő; Business: körforgásos kiosztás) |
 | Riportok | `dashboard`, `reports` (havi bontás, konverzió, pipeline, űrlapok, források, csapat) |
 | Super Admin | `admin/stats`, `admin/workspaces`, `admin/users`, `admin/audit-logs` (`php artisan crm:super-admin email@cim`) |
+
+## Fiókbiztonság és adatvédelem
+
+- **E-mail-megerősítés:** regisztráció után aláírt, 24 órás link; megerősítés nélkül a munkaterületi végpontok `email_unverified` kóddal tiltanak.
+- **Elfelejtett jelszó:** e-mailes link (egységes válasz, hogy ne derüljön ki, létezik-e a cím); visszaállításkor minden munkamenet kijelentkezik.
+- **E-mail-cím módosítás:** jelszóval, csak az új cím megerősítése után; a régi címre biztonsági értesítés megy.
+- **Kétlépcsős azonosítás (TOTP):** QR-kód, 8 egyszer használatos visszaállító kód, visszajátszás elleni védelem, 5 perces bejelentkezési kihívás, frekvenciakorlát.
+- **GDPR:** JSON adatexport, fióktörlés jelszóval + megerősítő szóval. A saját munkaterületek törlődnek (az előfizetés azonnal megszűnik); csapattal rendelkező munkaterületnél előbb át kell adni a tulajdonjogot (`POST team/owner`). A kiállított számlák a számviteli megőrzési időre megmaradnak.
+- **Értesítések:** határidő-emlékeztető, reggeli összefoglaló (`crm:send-daily-digest`, helyi idő szerint 7:00), új érdeklődő – mind kikapcsolható. Minden levél a felhasználó nyelvén, márkázott sablonnal (`resources/views/vendor/mail`).
 
 ## Biztonsági alapelvek
 

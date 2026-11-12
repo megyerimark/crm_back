@@ -33,6 +33,7 @@ class BillingTest extends TestCase
         config([
             'cashier.secret' => 'sk_test_fake',
             'cashier.webhook.secret' => null,
+            'billing.allow_unsigned_webhooks' => true,
             'plans.plans.pro.stripe_prices' => ['monthly' => 'price_pro_m', 'yearly' => 'price_pro_y'],
             'plans.plans.business.stripe_prices' => ['monthly' => 'price_biz_m', 'yearly' => 'price_biz_y'],
             'billing.szamlazz.enabled' => true,
@@ -160,6 +161,46 @@ class BillingTest extends TestCase
         $this->assertSame('canceled', $this->workspace->fresh()->subscription_status);
     }
 
+    public function test_checkout_redirect_alone_never_grants_a_paid_plan(): void
+    {
+        $this->signIn('free');
+        $this->putJson('/api/v1/billing/details', $this->billingDetails());
+
+        $this->postJson('/api/v1/billing/checkout', ['plan' => 'business', 'interval' => 'monthly'])->assertOk();
+        $this->getJson('/api/v1/billing?checkout=success')->assertOk()->assertJsonPath('status.has_subscription', false);
+
+        $this->getJson('/api/v1/workspace')->assertJsonPath('subscription.effective_plan', 'free');
+        $this->postJson('/api/v1/team/invitations', ['email' => 'x@example.com', 'role' => 'member'])->assertStatus(402);
+    }
+
+    public function test_unsigned_webhooks_are_rejected_when_no_secret_is_configured(): void
+    {
+        config(['billing.allow_unsigned_webhooks' => false]);
+        $this->signIn('free');
+        $this->workspace->forceFill(['stripe_id' => 'cus_test'])->save();
+
+        $this->webhook('customer.subscription.created', $this->subscriptionObject('price_biz_m'))->assertForbidden();
+
+        $this->assertSame('free', app(PlanService::class)->effectivePlan($this->workspace->fresh())->value);
+        $this->assertSame(0, $this->workspace->subscriptions()->count());
+    }
+
+    public function test_webhook_signature_is_verified(): void
+    {
+        config(['cashier.webhook.secret' => 'whsec_test', 'billing.allow_unsigned_webhooks' => false]);
+        $this->signIn('free');
+        $this->workspace->forceFill(['stripe_id' => 'cus_test'])->save();
+        $body = json_encode(['id' => 'evt_sig', 'type' => 'customer.subscription.created', 'data' => ['object' => $this->subscriptionObject('price_biz_m')]]);
+        $timestamp = time();
+
+        $this->call('POST', '/api/stripe/webhook', [], [], [], ['HTTP_STRIPE_SIGNATURE' => "t={$timestamp},v1=forged", 'CONTENT_TYPE' => 'application/json'], $body)->assertForbidden();
+        $this->assertSame('free', $this->workspace->fresh()->plan);
+
+        $signature = hash_hmac('sha256', "{$timestamp}.{$body}", 'whsec_test');
+        $this->call('POST', '/api/stripe/webhook', [], [], [], ['HTTP_STRIPE_SIGNATURE' => "t={$timestamp},v1={$signature}", 'CONTENT_TYPE' => 'application/json'], $body)->assertOk();
+        $this->assertSame('business', app(PlanService::class)->effectivePlan($this->workspace->fresh())->value);
+    }
+
     public function test_paid_invoice_issues_a_szamlazz_e_invoice_once(): void
     {
         Storage::fake('local');
@@ -192,7 +233,7 @@ class BillingTest extends TestCase
                 && str_contains($xml, '<adoszam>12345678-2-41</adoszam>')
                 && str_contains($xml, '<afakulcs>27</afakulcs>')
                 && str_contains($xml, '<bruttoErtek>2990</bruttoErtek>')
-                && str_contains($xml, '<megnevezes>ÜgyfélFlow Pro előfizetés (havi)</megnevezes>');
+                && str_contains($xml, '<megnevezes>VállalkozóOS Pro előfizetés (havi)</megnevezes>');
         });
 
         $this->get("/api/v1/billing/invoices/{$invoice->id}/pdf")->assertOk();

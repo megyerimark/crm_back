@@ -42,7 +42,8 @@ class StripeBillingGateway implements BillingGateway
 
     public function swap(Workspace $workspace, string $priceId): void
     {
-        $workspace->subscription('default')->swap($priceId);
+        /* The new price is invoiced immediately and only applied if that payment succeeds. */
+        $workspace->subscription('default')->errorIfPaymentFails()->swapAndInvoice($priceId);
     }
 
     public function cancel(Workspace $workspace): void
@@ -53,6 +54,11 @@ class StripeBillingGateway implements BillingGateway
     public function resume(Workspace $workspace): void
     {
         $workspace->subscription('default')->resume();
+    }
+
+    public function cancelNow(Workspace $workspace): void
+    {
+        $workspace->subscription('default')->cancelNow();
     }
 
     public function syncCustomer(Workspace $workspace): void

@@ -21,7 +21,11 @@ class NewLeadReceived extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return $notifiable instanceof AnonymousNotifiable ? ['mail'] : ['mail', 'database'];
+        if ($notifiable instanceof AnonymousNotifiable) {
+            return ['mail'];
+        }
+
+        return $notifiable->notify_new_leads ? ['mail', 'database'] : ['database'];
     }
 
     public function toMail(object $notifiable): MailMessage

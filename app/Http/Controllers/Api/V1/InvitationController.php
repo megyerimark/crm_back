@@ -44,6 +44,11 @@ class InvitationController extends Controller
             $invitation->workspace->members()->syncWithoutDetaching([$user->id => ['role' => $invitation->role]]);
             $invitation->forceFill(['accepted_at' => now()])->save();
             $user->forceFill(['current_workspace_id' => $invitation->workspace_id])->save();
+
+            /* The invitation was delivered to this address, which proves control of the mailbox. */
+            if (! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
         });
 
         $audit->log('invitation.accepted', $invitation, [], $invitation->workspace_id);

@@ -8,6 +8,8 @@ use App\Models\Workspace;
 use App\Services\Billing\BillingService;
 use App\Services\Billing\InvoiceCalculator;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Laravel\Cashier\Cashier;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +21,21 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class StripeWebhookController extends WebhookController
 {
+    /**
+     * Fails closed: Cashier only verifies the Stripe signature when a webhook secret is configured,
+     * so unsigned events are refused unless they are explicitly allowed (local development).
+     */
+    public function handleWebhook(Request $request): Response
+    {
+        if (blank(config('cashier.webhook.secret')) && ! config('billing.allow_unsigned_webhooks')) {
+            Log::warning('Stripe webhook rejected: STRIPE_WEBHOOK_SECRET is not configured.');
+
+            return new Response('Webhook signing secret is not configured.', 403);
+        }
+
+        return parent::handleWebhook($request);
+    }
+
     protected function handleCustomerSubscriptionCreated(array $payload): Response
     {
         $response = parent::handleCustomerSubscriptionCreated($payload);

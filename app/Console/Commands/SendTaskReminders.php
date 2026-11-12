@@ -31,7 +31,7 @@ class SendTaskReminders extends Command
                 foreach ($tasks as $task) {
                     $workspace = $workspaces[$task->workspace_id] ?? null;
 
-                    if (! $workspace || ! $task->assignee || ! $plans->hasFeature($workspace, 'email_reminders')) {
+                    if (! $workspace || ! $task->assignee || ! $task->assignee->notify_task_reminders || ! $plans->hasFeature($workspace, 'email_reminders')) {
                         continue;
                     }
 
