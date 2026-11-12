@@ -31,9 +31,11 @@ class WorkspaceResource extends JsonResource
             'role' => $this->pivot?->role,
             'plan' => $this->plan,
             'effective_plan' => $plans->effectivePlan($this->resource)->value,
-            'on_trial' => $this->onTrial(),
+            'on_trial' => $this->onGenericTrial(),
             'trial_ends_at' => $this->trial_ends_at,
             'subscription_status' => $this->subscription_status,
+            'billing_interval' => $this->billing_interval,
+            'intended_plan' => $this->intended_plan,
             'created_at' => $this->created_at,
         ];
     }

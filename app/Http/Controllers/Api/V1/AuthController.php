@@ -35,6 +35,8 @@ class AuthController extends Controller
             'country' => ['nullable', 'string', 'size:2'],
             'currency' => ['nullable', 'string', 'size:3'],
             'accept_terms' => ['accepted'],
+            'plan' => ['nullable', Rule::in(['free', 'pro', 'business'])],
+            'interval' => ['nullable', Rule::in(['monthly', 'yearly'])],
         ]);
 
         $user = DB::transaction(function () use ($data): User {
@@ -53,6 +55,8 @@ class AuthController extends Controller
                     'timezone' => $data['timezone'] ?? 'Europe/Budapest',
                     'country' => strtoupper($data['country'] ?? 'HU'),
                     'currency' => strtoupper($data['currency'] ?? 'HUF'),
+                    'intended_plan' => in_array($data['plan'] ?? null, ['pro', 'business'], true) ? $data['plan'] : null,
+                    'billing_interval' => $data['interval'] ?? null,
                 ]);
             }
 

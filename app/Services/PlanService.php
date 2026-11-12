@@ -33,7 +33,7 @@ class PlanService
             return $plan;
         }
 
-        if ($workspace->onTrial()) {
+        if ($workspace->onGenericTrial()) {
             return Plan::from(config('plans.trial_plan'));
         }
 
@@ -50,7 +50,7 @@ class PlanService
     }
 
     /**
-     * @return array{name: string, price: int, currency: string, limits: array<string, int|null>, features: array<string, bool>}
+     * @return array{name: string, price: int, prices: array<string, int>, stripe_prices: array<string, string|null>, currency: string, limits: array<string, int|null>, features: array<string, bool>}
      */
     public function definition(Plan $plan): array
     {
@@ -153,9 +153,12 @@ class PlanService
         return [
             'plan' => $workspace->plan,
             'effective_plan' => $effective->value,
-            'on_trial' => $workspace->onTrial(),
+            'on_trial' => $workspace->onGenericTrial(),
             'trial_ends_at' => $workspace->trial_ends_at?->toIso8601String(),
             'subscription_status' => $workspace->subscription_status,
+            'subscription_ends_at' => $workspace->subscription_ends_at?->toIso8601String(),
+            'billing_interval' => $workspace->billing_interval,
+            'intended_plan' => $workspace->intended_plan,
             'limits' => $definition['limits'],
             'features' => $definition['features'],
             'usage' => $this->usage($workspace),

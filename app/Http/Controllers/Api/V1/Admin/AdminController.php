@@ -83,7 +83,7 @@ class AdminController extends Controller
         $before = $workspace->only(['plan', 'subscription_status', 'trial_ends_at', 'suspended_at']);
 
         if (isset($data['extend_trial_days'])) {
-            $base = $workspace->onTrial() ? $workspace->trial_ends_at : now();
+            $base = $workspace->onGenericTrial() ? $workspace->trial_ends_at : now();
             $workspace->trial_ends_at = $base->copy()->addDays($data['extend_trial_days']);
         }
 

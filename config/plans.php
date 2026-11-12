@@ -7,6 +7,7 @@
 |
 | Prices and limits are starting business hypotheses (see product spec, section 4-5).
 | A null limit means "unlimited" (subject to the fair-use caps below).
+| Yearly prices are ten times the monthly price (two months free).
 |
 */
 
@@ -26,6 +27,8 @@ return [
         'free' => [
             'name' => 'Free',
             'price' => 0,
+            'prices' => ['monthly' => 0, 'yearly' => 0],
+            'stripe_prices' => ['monthly' => null, 'yearly' => null],
             'currency' => 'HUF',
             'limits' => [
                 'users' => 1,
@@ -57,6 +60,11 @@ return [
         'pro' => [
             'name' => 'Pro',
             'price' => 2990,
+            'prices' => ['monthly' => 2990, 'yearly' => 29900],
+            'stripe_prices' => [
+                'monthly' => env('STRIPE_PRICE_PRO_MONTHLY'),
+                'yearly' => env('STRIPE_PRICE_PRO_YEARLY'),
+            ],
             'currency' => 'HUF',
             'limits' => [
                 'users' => 1,
@@ -88,6 +96,11 @@ return [
         'business' => [
             'name' => 'Business',
             'price' => 5990,
+            'prices' => ['monthly' => 5990, 'yearly' => 59900],
+            'stripe_prices' => [
+                'monthly' => env('STRIPE_PRICE_BUSINESS_MONTHLY'),
+                'yearly' => env('STRIPE_PRICE_BUSINESS_YEARLY'),
+            ],
             'currency' => 'HUF',
             'limits' => [
                 'users' => 5,

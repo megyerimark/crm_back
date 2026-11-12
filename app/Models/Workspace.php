@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Cashier\Billable;
 
-#[Fillable(['name', 'slug', 'owner_id', 'country', 'timezone', 'currency', 'locale', 'plan', 'trial_ends_at', 'subscription_status', 'subscription_ends_at'])]
+#[Fillable(['name', 'slug', 'owner_id', 'country', 'timezone', 'currency', 'locale', 'plan', 'trial_ends_at', 'subscription_status', 'subscription_ends_at', 'billing_interval', 'intended_plan', 'billing_name', 'billing_email', 'billing_country', 'billing_postcode', 'billing_city', 'billing_address', 'billing_tax_number', 'billing_eu_vat_number'])]
 class Workspace extends Model
 {
     /** @use HasFactory<WorkspaceFactory> */
-    use HasFactory;
+    use Billable, HasFactory;
 
     protected function casts(): array
     {
@@ -22,6 +23,7 @@ class Workspace extends Model
             'trial_ends_at' => 'datetime',
             'subscription_ends_at' => 'datetime',
             'suspended_at' => 'datetime',
+            'trial_reminder_sent_at' => 'datetime',
         ];
     }
 
@@ -49,8 +51,59 @@ class Workspace extends Model
         return $this->hasMany(Invitation::class);
     }
 
-    public function onTrial(): bool
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
     {
-        return $this->trial_ends_at !== null && $this->trial_ends_at->isFuture();
+        return $this->hasMany(Invoice::class)->latest('id');
+    }
+
+    /**
+     * Billing details required on a Hungarian invoice (buyer name and full address).
+     */
+    public function hasCompleteBillingDetails(): bool
+    {
+        return filled($this->billing_name) && filled($this->billing_country) && filled($this->billing_postcode)
+            && filled($this->billing_city) && filled($this->billing_address);
+    }
+
+    public function stripeName(): ?string
+    {
+        return $this->billing_name ?: $this->name;
+    }
+
+    public function stripeEmail(): ?string
+    {
+        return $this->billing_email ?: $this->owner?->email;
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    public function stripeAddress(): array
+    {
+        return [
+            'country' => $this->billing_country,
+            'postal_code' => $this->billing_postcode,
+            'city' => $this->billing_city,
+            'line1' => $this->billing_address,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function stripePreferredLocales(): array
+    {
+        return [$this->locale ?: 'hu'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function stripeMetadata(): array
+    {
+        return ['workspace_id' => (string) $this->id];
     }
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminController;
 use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AutomationRuleController;
+use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DashboardController;
@@ -20,7 +21,11 @@ use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TeamController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
+use App\Http\Controllers\Webhooks\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
+
+/* Stripe webhooks (signature verified by Cashier when STRIPE_WEBHOOK_SECRET is set). */
+Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('stripe.webhook');
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
     /* Public endpoints */
@@ -102,6 +107,17 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::delete('team/members/{user}', [TeamController::class, 'removeMember'])->name('team.members.destroy');
                 Route::post('team/invitations', [TeamController::class, 'invite'])->name('team.invitations.store');
                 Route::delete('team/invitations/{invitation}', [TeamController::class, 'revoke'])->name('team.invitations.destroy');
+
+                Route::prefix('billing')->name('billing.')->group(function (): void {
+                    Route::get('/', [BillingController::class, 'show'])->name('show');
+                    Route::put('details', [BillingController::class, 'updateDetails'])->name('details');
+                    Route::post('checkout', [BillingController::class, 'checkout'])->name('checkout');
+                    Route::post('portal', [BillingController::class, 'portal'])->name('portal');
+                    Route::post('swap', [BillingController::class, 'swap'])->name('swap');
+                    Route::post('cancel', [BillingController::class, 'cancel'])->name('cancel');
+                    Route::post('resume', [BillingController::class, 'resume'])->name('resume');
+                    Route::get('invoices/{invoice}/pdf', [BillingController::class, 'downloadInvoice'])->name('invoices.pdf');
+                });
             });
         });
     });

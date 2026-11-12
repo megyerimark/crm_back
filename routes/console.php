@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 Schedule::command('crm:send-task-reminders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('crm:prune-import-files')->hourly();
 Schedule::command('sanctum:prune-expired --hours=24')->daily();
+Schedule::command('crm:send-trial-reminders')->dailyAt('09:12');

@@ -6,10 +6,12 @@ use App\Enums\Plan;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WorkspaceResource;
 use App\Services\AuditLogger;
+use App\Services\Billing\BillingService;
 use App\Services\PlanService;
 use App\Services\WorkspaceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 class WorkspaceController extends Controller
@@ -81,8 +83,11 @@ class WorkspaceController extends Controller
     public function plans(): JsonResponse
     {
         return response()->json([
-            'data' => collect(Plan::cases())->map(fn (Plan $plan) => ['key' => $plan->value] + $this->plans->definition($plan))->values(),
+            'data' => collect(Plan::cases())->map(fn (Plan $plan) => ['key' => $plan->value] + Arr::except($this->plans->definition($plan), 'stripe_prices'))->values(),
             'trial_days' => config('plans.trial_days'),
+            'checkout_enabled' => app(BillingService::class)->isConfigured(),
+            'prices_include_vat' => (bool) config('billing.vat.prices_include_vat'),
+            'vat_key' => config('billing.vat.key'),
         ]);
     }
 

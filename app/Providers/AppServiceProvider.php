@@ -14,6 +14,8 @@ use App\Models\Pipeline;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\Billing\BillingGateway;
+use App\Services\Billing\StripeBillingGateway;
 use App\Support\CurrentWorkspace;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -21,12 +23,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->app->scoped(CurrentWorkspace::class);
+        $this->app->bind(BillingGateway::class, StripeBillingGateway::class);
+
+        /* The workspace (not the user) is the paying customer; our own webhook route replaces Cashier's. */
+        Cashier::useCustomerModel(Workspace::class);
+        Cashier::ignoreRoutes();
     }
 
     public function boot(): void

@@ -44,4 +44,13 @@ Tesztek: `php artisan test`
 - Import: privát tárhely, típus- és méretellenőrzés, queue-alapú feldolgozás, sikeres import után és 24 óra elteltével automatikus fájltörlés.
 - Időpontok UTC-ben tárolva; a riportok a munkaterület időzónájában csoportosítanak.
 
-Stripe-integráció a későbbi mérföldkőben (a Super Admin addig kézzel állítja a csomagot).
+## Előfizetés és számlázás
+
+- **Stripe (Laravel Cashier)**: a fizető ügyfél a munkaterület. Havi és éves díj (`config/plans.php`, éves = 10 havi díj), Stripe Checkout, ügyfélportál (kártyacsere, lemondás), csomag- és ciklusváltás arányosítással, lemondás az időszak végére és visszavonás.
+- A próbaidő alatt indított előfizetés megtartja a hátralévő ingyenes napokat; az első terhelés a próba végén történik.
+- **Webhook**: `POST /api/stripe/webhook` (Stripe Dashboardban: `customer.subscription.created|updated|deleted`, `invoice.paid`). Minden előfizetés-változás után a munkaterület csomagja szinkronizálódik; lejáratkor Free-re vált, adat nem törlődik.
+- **Számlázz.hu e-számla**: minden kifizetett Stripe-számlához automatikusan (queue, újrapróbálással, Stripe-azonosító alapján idempotensen) készül magyar e-számla, PDF-je letölthető. Az ÁFA-kulcs (`BILLING_VAT_KEY`, alapértelmezés 27, alanyi mentességnél `AAM`) és az, hogy az árak bruttók-e (`BILLING_PRICES_INCLUDE_VAT`), konfigurálható.
+- Számlázási adatok (név, cím, adószám, EU-adószám) kötelezők az előfizetés indítása előtt.
+- `crm:send-trial-reminders`: e-mail a próba lejárta előtt 3 nappal.
+
+Beállítás: `.env` – `STRIPE_*`, `STRIPE_PRICE_*` (4 ár: Pro/Business × havi/éves, HUF), `SZAMLAZZ_*`. Stripe-kulcs nélkül a felület jelzi, hogy az online fizetés még nincs beállítva, és a Super Admin kézzel is állíthat csomagot.
