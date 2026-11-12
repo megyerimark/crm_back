@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\WorkspaceResource;
 use App\Models\User;
+use App\Notifications\SecurityNotice;
 use App\Services\AuditLogger;
 use App\Services\WorkspaceService;
 use Illuminate\Http\JsonResponse;
@@ -64,6 +65,7 @@ class AuthController extends Controller
         });
 
         $this->audit->log('user.registered', $user, [], $user->current_workspace_id);
+        $user->sendEmailVerificationNotification();
 
         return $this->tokenResponse($user, 201);
     }
@@ -80,6 +82,14 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages(['email' => __('crm.invalid_credentials')]);
+        }
+
+        if ($user->hasTwoFactorEnabled()) {
+            return response()->json([
+                'two_factor_required' => true,
+                'challenge' => TwoFactorController::makeChallenge($user, $data['device_name'] ?? 'web'),
+                'message' => __('account.two_factor_required'),
+            ]);
         }
 
         $user->forceFill(['last_login_at' => now()])->save();
@@ -109,8 +119,10 @@ class AuthController extends Controller
         $user = $request->user();
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'locale' => ['sometimes', Rule::in(['hu', 'en', 'de'])],
+            'notify_task_reminders' => ['sometimes', 'boolean'],
+            'notify_daily_digest' => ['sometimes', 'boolean'],
+            'notify_new_leads' => ['sometimes', 'boolean'],
             'theme' => ['sometimes', Rule::in(['light', 'dark', 'system'])],
             'timezone' => ['sometimes', 'nullable', 'timezone:all'],
         ]);
@@ -130,6 +142,7 @@ class AuthController extends Controller
         $user = $request->user();
         $user->update(['password' => $data['password']]);
         $user->tokens()->where('id', '!=', $user->currentAccessToken()?->id)->delete();
+        $user->notify(new SecurityNotice('password_changed'));
 
         return response()->json(['ok' => true]);
     }

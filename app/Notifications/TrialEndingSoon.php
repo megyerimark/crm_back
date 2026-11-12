@@ -26,6 +26,7 @@ class TrialEndingSoon extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject(__('billing.trial_ending_subject', ['days' => $this->days]))
+            ->greeting(__('account.greeting', ['name' => $notifiable->name]))
             ->line(__('billing.trial_ending_line', [
                 'workspace' => $this->workspace->name,
                 'date' => $this->workspace->trial_ends_at?->timezone($this->workspace->timezone)->format('Y-m-d'),

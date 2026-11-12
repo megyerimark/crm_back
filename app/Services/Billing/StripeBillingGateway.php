@@ -56,6 +56,11 @@ class StripeBillingGateway implements BillingGateway
         $workspace->subscription('default')->resume();
     }
 
+    public function cancelNow(Workspace $workspace): void
+    {
+        $workspace->subscription('default')->cancelNow();
+    }
+
     public function syncCustomer(Workspace $workspace): void
     {
         if ($workspace->hasStripeId()) {

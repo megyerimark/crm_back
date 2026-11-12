@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\ActivityController;
 use App\Http\Controllers\Api\V1\Admin\AdminController;
 use App\Http\Controllers\Api\V1\AuditLogController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Api\V1\PublicFormController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TeamController;
+use App\Http\Controllers\Api\V1\TwoFactorController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +34,15 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::middleware('throttle:auth')->group(function (): void {
         Route::post('auth/register', [AuthController::class, 'register'])->name('auth.register');
         Route::post('auth/login', [AuthController::class, 'login'])->name('auth.login');
+        Route::post('auth/two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('auth.two-factor.challenge');
+        Route::post('auth/forgot-password', [AccountController::class, 'forgotPassword'])->name('auth.forgot-password');
+        Route::post('auth/reset-password', [AccountController::class, 'resetPassword'])->name('auth.reset-password');
+    });
+
+    /* Signed links from e-mails (validated on the relative URL, no login needed) */
+    Route::middleware(['signed:relative', 'throttle:20,1'])->group(function (): void {
+        Route::get('auth/email/verify/{id}/{hash}', [AccountController::class, 'verify'])->name('auth.verify');
+        Route::get('auth/email-change/confirm/{id}/{hash}', [AccountController::class, 'confirmEmailChange'])->name('auth.email-change.confirm');
     });
 
     Route::get('plans', [WorkspaceController::class, 'plans'])->name('plans');
@@ -48,9 +59,20 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::patch('auth/profile', [AuthController::class, 'updateProfile'])->name('auth.profile');
         Route::put('auth/password', [AuthController::class, 'updatePassword'])->name('auth.password');
+        Route::post('auth/email/resend', [AccountController::class, 'resendVerification'])->middleware('throttle:3,1')->name('auth.verify.resend');
+        Route::post('auth/email-change', [AccountController::class, 'requestEmailChange'])->middleware('throttle:5,1')->name('auth.email-change');
+        Route::delete('auth/email-change', [AccountController::class, 'cancelEmailChange'])->name('auth.email-change.cancel');
+        Route::get('auth/account/export', [AccountController::class, 'export'])->middleware('throttle:5,1')->name('auth.account.export');
+        Route::delete('auth/account', [AccountController::class, 'destroy'])->middleware('throttle:5,1')->name('auth.account.destroy');
+        Route::prefix('auth/two-factor')->name('auth.two-factor.')->middleware('throttle:10,1')->group(function (): void {
+            Route::post('setup', [TwoFactorController::class, 'setup'])->name('setup');
+            Route::post('confirm', [TwoFactorController::class, 'confirm'])->name('confirm');
+            Route::post('recovery-codes', [TwoFactorController::class, 'recoveryCodes'])->name('recovery-codes');
+            Route::delete('/', [TwoFactorController::class, 'disable'])->name('disable');
+        });
 
         Route::get('workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
-        Route::post('workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+        Route::post('workspaces', [WorkspaceController::class, 'store'])->middleware('verified-email')->name('workspaces.store');
         Route::post('workspaces/{workspace}/switch', [WorkspaceController::class, 'switch'])->whereNumber('workspace')->name('workspaces.switch');
         Route::post('invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
 
@@ -65,7 +87,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         });
 
         /* Workspace scoped (X-Workspace-Id header) */
-        Route::middleware('workspace')->group(function (): void {
+        Route::middleware(['verified-email', 'workspace'])->group(function (): void {
             Route::get('workspace', [WorkspaceController::class, 'current'])->name('workspace.current');
             Route::get('dashboard', DashboardController::class)->name('dashboard');
             Route::get('reports', ReportController::class)->name('reports');
@@ -106,6 +128,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                 Route::patch('team/members/{user}', [TeamController::class, 'updateMember'])->name('team.members.update');
                 Route::delete('team/members/{user}', [TeamController::class, 'removeMember'])->name('team.members.destroy');
                 Route::post('team/invitations', [TeamController::class, 'invite'])->name('team.invitations.store');
+                Route::post('team/owner', [TeamController::class, 'transferOwnership'])->name('team.owner');
                 Route::delete('team/invitations/{invitation}', [TeamController::class, 'revoke'])->name('team.invitations.destroy');
 
                 Route::prefix('billing')->name('billing.')->group(function (): void {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureWorkspaceRole;
 use App\Http\Middleware\ResolveWorkspace;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace' => ResolveWorkspace::class,
             'workspace.role' => EnsureWorkspaceRole::class,
             'super-admin' => EnsureSuperAdmin::class,
+            'verified-email' => EnsureEmailIsVerified::class,
         ]);
 
         /* The workspace must be resolved before route model binding so bindings are tenant scoped. */

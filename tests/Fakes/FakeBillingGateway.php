@@ -49,6 +49,12 @@ class FakeBillingGateway implements BillingGateway
         $workspace->subscription('default')->forceFill(['ends_at' => null])->save();
     }
 
+    public function cancelNow(Workspace $workspace): void
+    {
+        $this->calls[] = ['method' => 'cancelNow'];
+        $workspace->subscription('default')->forceFill(['stripe_status' => 'canceled', 'ends_at' => now()])->save();
+    }
+
     public function syncCustomer(Workspace $workspace): void
     {
         $this->calls[] = ['method' => 'syncCustomer'];

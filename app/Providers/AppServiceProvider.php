@@ -62,7 +62,8 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('auth', fn (Request $request) => [
             Limit::perMinute(10)->by('auth:'.$request->ip()),
-            Limit::perMinute(5)->by('auth-email:'.strtolower((string) $request->input('email'))),
+            /* Per account: the e-mail address, or the 2FA challenge (which identifies the pending login). */
+            Limit::perMinute(5)->by('auth-id:'.(filled($request->input('email')) ? strtolower((string) $request->input('email')) : sha1((string) $request->input('challenge')))),
         ]);
 
         RateLimiter::for('public-form', fn (Request $request) => [

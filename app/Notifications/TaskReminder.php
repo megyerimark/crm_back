@@ -26,7 +26,9 @@ class TaskReminder extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject(__('crm.mail.reminder_subject', ['title' => $this->task->title]))
+            ->greeting(__('account.greeting', ['name' => $notifiable->name]))
             ->line(__('crm.mail.reminder_line', ['title' => $this->task->title, 'due' => $this->task->due_at?->timezone($this->timezone)->format('Y-m-d H:i')]))
-            ->action(__('crm.mail.open_task'), rtrim(config('app.frontend_url'), '/').'/tasks');
+            ->action(__('crm.mail.open_task'), rtrim(config('app.frontend_url'), '/').'/tasks')
+            ->line(__('account.unsubscribe_hint'));
     }
 }

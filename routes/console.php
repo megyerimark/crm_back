@@ -12,3 +12,4 @@ Schedule::command('crm:send-task-reminders')->everyFiveMinutes()->withoutOverlap
 Schedule::command('crm:prune-import-files')->hourly();
 Schedule::command('sanctum:prune-expired --hours=24')->daily();
 Schedule::command('crm:send-trial-reminders')->dailyAt('09:12');
+Schedule::command('crm:send-daily-digest')->hourlyAt(2)->withoutOverlapping();
