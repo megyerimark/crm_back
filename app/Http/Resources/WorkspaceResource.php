@@ -27,6 +27,7 @@ class WorkspaceResource extends JsonResource
             'timezone' => $this->timezone,
             'currency' => $this->currency,
             'locale' => $this->locale,
+            'quote_follow_up_days' => $this->quote_follow_up_days,
             'owner_id' => $this->owner_id,
             'role' => $this->pivot?->role,
             'plan' => $this->plan,

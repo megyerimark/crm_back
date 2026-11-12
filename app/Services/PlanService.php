@@ -14,6 +14,7 @@ use App\Models\Import;
 use App\Models\Lead;
 use App\Models\Pipeline;
 use App\Models\PlanSetting;
+use App\Models\Quote;
 use App\Models\Task;
 use App\Models\Workspace;
 use Illuminate\Support\Facades\Cache;
@@ -136,6 +137,7 @@ class PlanService
             'active_tasks' => Task::withoutGlobalScopes()->where('workspace_id', $id)->where('status', '!=', 'done')->count(),
             'automations' => AutomationRule::withoutGlobalScopes()->where('workspace_id', $id)->count(),
             'custom_fields' => CustomFieldDefinition::withoutGlobalScopes()->where('workspace_id', $id)->count(),
+            'quotes_per_month' => Quote::withoutGlobalScopes()->withTrashed()->where('workspace_id', $id)->where('created_at', '>=', now()->startOfMonth())->count(),
             'imports' => Import::withoutGlobalScopes()->where('workspace_id', $id)->where('status', 'completed')->count(),
             default => 0,
         };

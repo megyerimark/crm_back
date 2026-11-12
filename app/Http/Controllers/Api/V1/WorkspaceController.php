@@ -69,6 +69,7 @@ class WorkspaceController extends Controller
             'timezone' => ['sometimes', 'timezone:all'],
             'currency' => ['sometimes', 'string', 'size:3'],
             'locale' => ['sometimes', Rule::in(['hu', 'en', 'de'])],
+            'quote_follow_up_days' => ['sometimes', 'integer', 'min:1', 'max:30'],
         ]);
 
         $workspace->update($data);

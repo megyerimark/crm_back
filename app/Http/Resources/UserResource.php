@@ -32,6 +32,7 @@ class UserResource extends JsonResource
             'notify_task_reminders' => $this->notify_task_reminders,
             'notify_daily_digest' => $this->notify_daily_digest,
             'notify_new_leads' => $this->notify_new_leads,
+            'notify_quote_updates' => $this->notify_quote_updates,
             'current_workspace_id' => $this->current_workspace_id,
             'created_at' => $this->created_at,
         ];

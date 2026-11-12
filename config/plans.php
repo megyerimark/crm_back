@@ -21,6 +21,7 @@ return [
         'active_tasks' => 20000,
         'import_max_rows' => 20000,
         'import_max_file_kb' => 10240,
+        'quotes_per_month' => 2000,
     ],
 
     'plans' => [
@@ -42,8 +43,10 @@ return [
                 'custom_fields' => 0,
                 'imports' => 1,
                 'import_max_rows' => 50,
+                'quotes_per_month' => 5,
             ],
             'features' => [
+                'quote_follow_ups' => false,
                 'advanced_search' => false,
                 'import_update_duplicates' => false,
                 'custom_form_fields' => false,
@@ -78,8 +81,10 @@ return [
                 'custom_fields' => 10,
                 'imports' => null,
                 'import_max_rows' => null,
+                'quotes_per_month' => null,
             ],
             'features' => [
+                'quote_follow_ups' => true,
                 'advanced_search' => true,
                 'import_update_duplicates' => true,
                 'custom_form_fields' => true,
@@ -114,8 +119,10 @@ return [
                 'custom_fields' => 30,
                 'imports' => null,
                 'import_max_rows' => null,
+                'quotes_per_month' => null,
             ],
             'features' => [
+                'quote_follow_ups' => true,
                 'advanced_search' => true,
                 'import_update_duplicates' => true,
                 'custom_form_fields' => true,

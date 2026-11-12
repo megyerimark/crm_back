@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Cashier\Billable;
 
-#[Fillable(['name', 'slug', 'owner_id', 'country', 'timezone', 'currency', 'locale', 'plan', 'trial_ends_at', 'subscription_status', 'subscription_ends_at', 'billing_interval', 'intended_plan', 'billing_name', 'billing_email', 'billing_country', 'billing_postcode', 'billing_city', 'billing_address', 'billing_tax_number', 'billing_eu_vat_number'])]
+#[Fillable(['name', 'slug', 'owner_id', 'country', 'timezone', 'currency', 'locale', 'quote_follow_up_days', 'plan', 'trial_ends_at', 'subscription_status', 'subscription_ends_at', 'billing_interval', 'intended_plan', 'billing_name', 'billing_email', 'billing_country', 'billing_postcode', 'billing_city', 'billing_address', 'billing_tax_number', 'billing_eu_vat_number'])]
 class Workspace extends Model
 {
     /** @use HasFactory<WorkspaceFactory> */

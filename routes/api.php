@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\V1\LeadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PipelineController;
 use App\Http\Controllers\Api\V1\PublicFormController;
+use App\Http\Controllers\Api\V1\PublicQuoteController;
+use App\Http\Controllers\Api\V1\QuoteController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SupportController;
 use App\Http\Controllers\Api\V1\TaskController;
@@ -53,6 +55,12 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
     Route::get('plans', [WorkspaceController::class, 'plans'])->name('plans');
     Route::get('invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+
+    Route::prefix('public/quotes/{token}')->name('public.quotes.')->middleware('throttle:public-quote')->group(function (): void {
+        Route::get('/', [PublicQuoteController::class, 'show'])->name('show');
+        Route::post('accept', [PublicQuoteController::class, 'accept'])->name('accept');
+        Route::post('decline', [PublicQuoteController::class, 'decline'])->name('decline');
+    });
 
     Route::prefix('public/forms/{slug}')->name('public.forms.')->group(function (): void {
         Route::get('/', [PublicFormController::class, 'show'])->middleware('throttle:60,1')->name('show');
@@ -125,6 +133,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::apiResource('deals', DealController::class);
 
             Route::apiResource('tasks', TaskController::class);
+
+            Route::post('quotes/{quote}/send', [QuoteController::class, 'send'])->middleware('throttle:30,60')->name('quotes.send');
+            Route::post('quotes/{quote}/mark', [QuoteController::class, 'mark'])->name('quotes.mark');
+            Route::post('quotes/{quote}/duplicate', [QuoteController::class, 'duplicate'])->name('quotes.duplicate');
+            Route::apiResource('quotes', QuoteController::class);
             Route::apiResource('activities', ActivityController::class)->only(['index', 'store', 'destroy']);
 
             Route::get('forms/{form}/submissions', [FormController::class, 'submissions'])->name('forms.submissions');

@@ -70,5 +70,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by('form:'.$request->route('slug').':'.$request->ip()),
             Limit::perHour(30)->by('form-ip:'.$request->ip()),
         ]);
+
+        /* Public quote links: generous for viewing, strict on accept/decline and on token guessing per IP. */
+        RateLimiter::for('public-quote', fn (Request $request) => $request->isMethod('GET')
+            ? [Limit::perMinute(60)->by('quote-ip:'.$request->ip())]
+            : [Limit::perMinute(5)->by('quote-answer:'.$request->ip())]);
     }
 }

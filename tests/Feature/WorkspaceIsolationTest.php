@@ -14,6 +14,7 @@ use App\Models\Invitation;
 use App\Models\Invoice;
 use App\Models\Lead;
 use App\Models\Pipeline;
+use App\Models\Quote;
 use App\Models\SupportTicket;
 use App\Models\Task;
 use App\Models\User;
@@ -83,12 +84,14 @@ class WorkspaceIsolationTest extends TestCase
         Storage::disk('local')->put('invoices/victim.pdf', self::MARKER);
         $ticket = SupportTicket::create(['workspace_id' => $ws, 'user_id' => $this->victim->id, 'subject' => self::MARKER.' Ticket']);
         $ticket->messages()->create(['user_id' => $this->victim->id, 'body' => self::MARKER]);
+        $quote = Quote::factory()->sent()->create(['workspace_id' => $ws, 'title' => self::MARKER.' Quote', 'client_id' => $client->id, 'deal_id' => $deal->id, 'owner_id' => $this->victim->id, 'recipient_email' => 'victim-customer@example.com']);
+        $quote->items()->create(['description' => self::MARKER.' item', 'quantity' => 1, 'unit_price' => 1000]);
 
         $this->victimIds = [
             'client' => $client->id, 'lead' => $lead->id, 'deal' => $deal->id, 'task' => $task->id, 'activity' => $activity->id,
             'form' => $form->id, 'import' => $import->id, 'automationRule' => $rule->id, 'customField' => $field->id,
             'invitation' => $invitation->id, 'invoice' => $invoice->id, 'ticket' => $ticket->id, 'pipeline' => $pipeline->id,
-            'user' => $this->victim->id, 'stage' => $stage->id,
+            'user' => $this->victim->id, 'stage' => $stage->id, 'quote' => $quote->id,
         ];
     }
 
@@ -119,7 +122,8 @@ class WorkspaceIsolationTest extends TestCase
             'owner_id' => $v['user'], 'assignee_id' => $v['user'], 'default_owner_id' => $v['user'], 'user_id' => $v['user'],
             'action_config' => ['assignee_id' => $v['user'], 'user_ids' => [$v['user']]],
             'stages' => [['id' => $v['stage'], 'name' => 'Hijacked', 'type' => 'open'], ['name' => 'B', 'type' => 'won']],
-            'value' => 1, 'position' => 0,
+            'value' => 1, 'position' => 0, 'status' => 'accepted', 'reason' => 'Attacker',
+            'items' => [['description' => 'Attacker', 'unit_price' => 1]], 'follow_up_at' => now()->addDay()->toIso8601String(),
         ];
     }
 
@@ -219,6 +223,7 @@ class WorkspaceIsolationTest extends TestCase
             'deals' => ['client_id' => [$v['client']], 'lead_id' => [$v['lead']], 'stage_id' => [$v['stage']], 'pipeline_id' => [$v['pipeline']], 'owner_id' => [$v['user']]],
             'tasks' => ['client_id' => [$v['client']], 'lead_id' => [$v['lead']], 'deal_id' => [$v['deal']], 'assignee_id' => [$v['user']]],
             'forms' => ['default_owner_id' => [$v['user']]],
+            'quotes' => ['client_id' => [$v['client']], 'lead_id' => [$v['lead']], 'deal_id' => [$v['deal']], 'owner_id' => [$v['user']]],
         ];
 
         foreach ($references as $table => $columns) {
@@ -282,5 +287,26 @@ class WorkspaceIsolationTest extends TestCase
         $this->assertNotSame('Hijacked', DB::table('pipeline_stages')->where('id', $v['stage'])->value('name'));
         $this->assertSame(['owner'], $this->victimWorkspace->members()->pluck('workspace_user.role')->all());
         $this->assertSame(self::MARKER.' Kft.', Workspace::find($ws)->name);
+
+        $quote = Quote::withoutGlobalScopes()->find($v['quote']);
+        $this->assertSame(self::MARKER.' Quote', $quote?->title);
+        $this->assertSame('sent', $quote->status);
+        $this->assertSame(1, $quote->items()->count());
+        $this->assertSame(0, $quote->view_count);
+        $this->assertNull($quote->deleted_at);
+    }
+
+    public function test_public_quote_link_exposes_only_that_quote_and_cannot_be_used_from_another_workspace(): void
+    {
+        $quote = Quote::withoutGlobalScopes()->findOrFail($this->victimIds['quote']);
+        $page = $this->getJson('/api/v1/public/quotes/'.$quote->public_token.'?preview=1')->assertOk();
+
+        $page->assertJsonMissingPath('data.id')->assertJsonMissingPath('data.workspace_id')->assertJsonMissingPath('data.client_id')
+            ->assertJsonMissingPath('data.deal_id')->assertJsonMissingPath('data.public_token')->assertJsonMissingPath('data.contact.id');
+
+        /* Guessing tokens of another workspace's quotes yields nothing. */
+        $this->getJson('/api/v1/public/quotes/'.strrev($quote->public_token))->assertNotFound();
+        $this->assertSame(0, Quote::withoutGlobalScopes()->where('workspace_id', $this->workspace->id)->count());
+        $this->assertVictimUntouched();
     }
 }

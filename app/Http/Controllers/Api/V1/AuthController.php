@@ -123,6 +123,7 @@ class AuthController extends Controller
             'notify_task_reminders' => ['sometimes', 'boolean'],
             'notify_daily_digest' => ['sometimes', 'boolean'],
             'notify_new_leads' => ['sometimes', 'boolean'],
+            'notify_quote_updates' => ['sometimes', 'boolean'],
             'theme' => ['sometimes', Rule::in(['light', 'dark', 'system'])],
             'timezone' => ['sometimes', 'nullable', 'timezone:all'],
         ]);

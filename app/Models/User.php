@@ -17,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'locale', 'theme', 'timezone', 'current_workspace_id', 'notify_task_reminders', 'notify_daily_digest', 'notify_new_leads'])]
+#[Fillable(['name', 'email', 'password', 'locale', 'theme', 'timezone', 'current_workspace_id', 'notify_task_reminders', 'notify_daily_digest', 'notify_new_leads', 'notify_quote_updates'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_last_step'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail
 {
@@ -40,6 +40,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'notify_task_reminders' => 'boolean',
             'notify_daily_digest' => 'boolean',
             'notify_new_leads' => 'boolean',
+            'notify_quote_updates' => 'boolean',
         ];
     }
 
