@@ -36,4 +36,10 @@ return [
     ],
 
     'trial_reminder_days' => 3,
+
+    /*
+     * Plan access is only ever granted from Stripe webhooks. Without STRIPE_WEBHOOK_SECRET those
+     * events cannot be verified, so they are rejected unless explicitly allowed for local development.
+     */
+    'allow_unsigned_webhooks' => (bool) env('BILLING_ALLOW_UNSIGNED_WEBHOOKS', false),
 ];

@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Laravel\Cashier\Exceptions\IncompletePayment;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -115,7 +116,12 @@ class BillingController extends Controller
         [$plan, $interval] = $this->validatedPlan($request);
         $this->ensureSubscribed();
 
-        $this->gateway->swap($workspace, $this->billing->priceId($plan, $interval));
+        try {
+            $this->gateway->swap($workspace, $this->billing->priceId($plan, $interval));
+        } catch (IncompletePayment) {
+            return response()->json(['message' => __('billing.payment_failed'), 'code' => 'payment_failed'], 402);
+        }
+
         $this->billing->sync($workspace);
         $this->audit->log('billing.swapped', $workspace, ['plan' => $plan->value, 'interval' => $interval]);
 
